@@ -1,0 +1,47 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: articles-redirect-scheme
+  namespace: ingest
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+    port: "443"
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: articles-http
+  namespace: ingest
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`articles.example.com`)
+      kind: Rule
+      middlewares:
+        - name: articles-redirect-scheme      
+      services:
+        - name: articles
+          port: 80
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: articles-https
+  namespace: ingest
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`articles.example.com`)
+      kind: Rule     
+      services:
+        - name: articles 
+          port: 80
+  tls:
+    certResolver: pebble

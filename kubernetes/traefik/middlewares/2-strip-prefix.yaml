@@ -1,0 +1,43 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: articles-strip-path-prefix
+  namespace: ingest
+spec:
+  stripPrefix:
+    prefixes:
+      - /api/v1
+      - /blue
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: articles-https
+  namespace: ingest
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`articles.example.com`)
+      kind: Rule
+      services:
+        - name: nginx-deploy-main.default
+          port: 80
+    - match: Host(`articles.example.com`) && Path(`/blue`)
+      kind: Rule
+      middlewares:
+        - name: articles-strip-path-prefix
+      services:
+        - name: articles-deploy-blue.default
+          port: 80
+    - match: Host(`articles.example.com`) && Path(`/api/v1`)
+      kind: Rule
+      middlewares:
+        - name: articles-strip-path-prefix
+      services:
+        - name: articles
+          port: 80
+  tls:
+    certResolver: pebble

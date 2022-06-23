@@ -1,0 +1,119 @@
+_format_version: "2.1"
+
+services:
+  - name: echo.default
+    url: http://echo.default
+    routes:
+      - name: echo.example.com
+        paths:
+          - /echo
+  - name: ip
+    url: https://ifconfig.me
+    routes:
+      - name: ip.example.com
+        paths:
+          - /ip
+  - name: articles.ingest
+    url: http://articles.ingest:8080
+    routes:
+      - name: api.example.com
+        paths:
+          - /api/v1
+
+plugins:
+  # https://docs.konghq.com/hub/kong-inc/rate-limiting/
+  - name: rate-limiting
+    service: ip
+    config:
+      minute: 5
+      policy: local
+
+  # https://docs.konghq.com/hub/kong-inc/request-size-limiting/
+  - name: request-size-limiting
+    service: articles.ingest
+    config:
+      allowed_payload_size: 128
+      size_unit: megabytes
+      require_content_length: false
+
+  #  https://docs.konghq.com/hub/kong-inc/prometheus/
+  - name: prometheus
+    service: articles.ingest
+    enabled: true
+
+  # https://docs.konghq.com/hub/kong-inc/key-auth/
+  - name: key-auth
+    service: articles.ingest
+    config:
+      key_names:
+        - apikey
+      key_in_body: false
+      key_in_header: true
+      key_in_query: true
+      hide_credentials: false
+      run_on_preflight: true
+
+  # https://docs.konghq.com/hub/kong-inc/cors/
+  - name: cors
+    service: articles.ingest
+    config:
+      origins:
+        - '*'
+      methods:
+        - GET
+        - POST
+        - DELETE
+        - PATCH
+      headers:
+        - Accept
+        - Accept-Version
+        - Content-Length
+        - Content-MD5
+        - Content-Type
+        - Date
+        - X-Auth-Token
+      exposed_headers:
+        - X-Auth-Token
+      credentials: true
+      max_age: 3600
+      preflight_continue: false
+
+  # https://docs.konghq.com/hub/kong-inc/ip-restriction/
+  - name: ip-restriction
+    service: ip
+    config:
+      allow:
+        - 172.42.42.0/24
+
+  # https://docs.konghq.com/hub/kong-inc/correlation-id/
+  - name: correlation-id
+    config:
+      header_name: request-id
+      generator: uuid#counter
+      echo_downstream: true
+
+  # https://docs.konghq.com/hub/kong-inc/request-transformer/
+  - name: request-transformer
+    service: articles.ingest
+    config:
+      remove:
+        headers:
+          - apikey
+        querystring:
+          - apikey
+      add:
+        querystring:
+          - request_id:$(headers["request-id"])
+          - appname:$(headers["X-Consumer-Username"])
+      add:
+        body:
+          - request_id:$(headers["request-id"])
+          - appname:$(headers["X-Consumer-Username"])
+
+consumers:
+  - username: gonzalo
+    keyauth_credentials:
+      - key: super-secret-123
+  - username: ramiro
+    keyauth_credentials:
+      - key: super-secret-124

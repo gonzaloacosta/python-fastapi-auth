@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: default
+  name: articles
+  namespace: devops
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: articles 
+          servicePort: 8080
+        path: /articles
+        pathType: Prefix

@@ -1,0 +1,17 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: articles
+  namespace: ingest
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`articles.example.com`)
+      kind: Rule
+      services:
+        - name: articles
+          port: 8080
+  tls:
+    certResolver: pebble

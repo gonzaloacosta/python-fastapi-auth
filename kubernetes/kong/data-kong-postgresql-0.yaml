@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: "2022-06-22T19:19:48Z"
+  finalizers:
+  - kubernetes.io/pvc-protection
+  labels:
+    app.kubernetes.io/component: primary
+    app.kubernetes.io/instance: kong
+    app.kubernetes.io/name: postgresql
+  name: data-kong-postgresql-0
+  namespace: kong
+  resourceVersion: "460316"
+  uid: 2c1ca249-d01f-4ae1-b6ce-07b00784df3c
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 8Gi
+  volumeMode: Filesystem
+  storageClassName: nfs-provisioner
+status:
+  phase: Pending
