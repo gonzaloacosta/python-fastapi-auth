@@ -1,6 +1,6 @@
 USERNAME				:= gonzalo
 REPOSITORY  		:= gonzaloacosta
-IMAGE						:= python-fastapi-apikey
+IMAGE						:= python-fastapi-auth
 HOST_PORT 			:= 9080
 HOST_IP					:= auth.example.com 
 CONTAINER_PORT	:= 80
@@ -21,18 +21,21 @@ test:
 	@echo "$(shell date) - GET /"
 	@curl -kv https://$(HOST_IP):$(HOST_PORT) | jq .
 	@echo ""
-	@echo "$(shell date) - POST /article"
+	@echo "$(shell date) - POST /apikey"
 	@curl -kv -X POST https://$(HOST_IP):$(HOST_PORT)/apikey -H 'Content-Type: application/json' -d "{\"appname\":\"gonzalo-appname\",\"apikey\":\"super-secret-123\"}" | jq .
-#	@echo ""
-#	@echo "GET /articles"
-#	@curl -s -X GET https://$(HOST_IP):$(HOST_PORT)/articles | jq .
-#	@echo ""
-#	@echo "GET /1"
-#	@curl -s https://$(HOST_IP):$(HOST_PORT)/article/1 | jq .
-#	@echo ""
-#	@echo "GET /3"
-#	@curl -s http://$(HOST_IP):$(HOST_PORT)/article/3 | jq .
-#	@echo ""
+	@echo ""
+	@echo "GET /apikeys"
+	@curl -s -X GET https://$(HOST_IP):$(HOST_PORT)/apikeys | jq .
+	@echo ""
+	@echo "GET /1"
+	@curl -s https://$(HOST_IP):$(HOST_PORT)/apikey/1 | jq .
+	@echo ""
+	@echo "GET /2"
+	@curl -s http://$(HOST_IP):$(HOST_PORT)/apikey/2 | jq .
+	@echo ""
+	@echo "GET /2"
+	@curl -s http://$(HOST_IP):$(HOST_PORT)/auth?apikey=super-secret-123 | jq .
+	@echo ""
 
 g/checkout:
 	@git checkout $(BRANCH)

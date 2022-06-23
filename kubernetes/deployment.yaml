@@ -2,23 +2,23 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: articles
-  name: articles
+    app: auth
+  name: auth
   namespace: ingest
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: articles 
+      app: auth 
   strategy: {}
   template:
     metadata:
       labels:
-        app: articles
+        app: auth
     spec:
       containers:
-      - image: gonzaloacosta/python-fastapi-articles:0.0.8
-        name: articles
+      - image: gonzaloacosta/python-fastapi-apikey:0.0.1
+        name: auth
         resources:
           limits:
             memory: "100Mi"

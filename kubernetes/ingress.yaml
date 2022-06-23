@@ -3,14 +3,14 @@ kind: Ingress
 metadata:
   annotations:
     kubernetes.io/ingress.class: default
-  name: articles
-  namespace: devops
+  name: auth
+  namespace: ingest
 spec:
   rules:
   - http:
       paths:
       - backend:
-          serviceName: articles 
+          serviceName: auth 
           servicePort: 8080
-        path: /articles
+        path: /auth
         pathType: Prefix
