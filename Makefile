@@ -4,7 +4,7 @@ IMAGE						:= python-fastapi-auth
 HOST_PORT 			:= 9080
 HOST_IP					:= auth.example.com 
 CONTAINER_PORT	:= 80
-VERSION					:= 0.0.10
+VERSION					:= 0.0.11
 BRANCH					:= master
 
 py/venv:
@@ -86,13 +86,27 @@ k/apply:
 watch:
 	@watch -n 5 'kubectl get all -n ingest'
 
-test/auth:
-	@echo "query string parameter"
-	@echo "http://api.example.com/api/v1/article/70\?apikey=super-secret-123 | jq ."
-	@curl -v http://api.example.com/api/v1/article/70\?apikey=super-secret-123 | jq .
-	@echo ""
+test/local/1:
+	@echo "local > auth"
+	@curl -v -H 'x-forwarded-uri:/api/v1/articles?apikey=super-secret-123' http://localhost:9080/auth
+
+test/local/2:
+	@echo "local > apikys"
+	@curl -v http://localhost:9080/apikeys | jq .
+
+test/api/1:
+	@echo "api gateway > auth > backend: query string parameter"
+	@curl -v http://api.example.com/api/v1/article/1\?apikey=super-secret-223 | jq .
+
+test/api/2:
 	@echo "header"
-	@echo "curl -H apikey:super-secret-123 http://api.example.com/api/v1/article/70 | jq ."
-	@curl -v -H apikey:super-secret-123 http://api.example.com/api/v1/article/70 | jq .
+	@echo "curl -H apikey:super-secret-223 http://api.example.com/api/v1/article/1 | jq ."
+	@curl -v -H apikey:super-secret-223 http://api.example.com/api/v1/article/1 | jq .
 
+test/api/3:
+	@echo "post article ramiro"
+	@curl -v -X POST http://api.example.com/api/v1/article -H 'apikey:super-secret-223' -H 'Content-Type: application/json' -d '{"username":"ramiro","text":"Another day in the office", "appname": "local-test-app", "request_id": "ac832ad4-c9c9-4eda-82ac-651233d23f2b", "wait_time": "0"}' | jq .
 
+test/api/4:
+	@echo "post article gonzalo"
+	@curl -v -X POST http://api.example.com/api/v1/article\?apikey=super-secret-123 -H 'Content-Type: application/json' -d '{"username":"gonzalo","text":"Another day in the office",  "request_id": "ac832ad4-c9c9-4eda-82ac-651233d23f2b", "wait_time": "0"}' | jq .

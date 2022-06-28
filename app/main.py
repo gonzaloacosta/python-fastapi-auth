@@ -121,6 +121,7 @@ async def check_apikey(
     Validate apikey
     """
 
+    # work here
     start_time = time.time()
 
     print("request.headers: {} {}".format(request.headers, request.headers.keys()))
@@ -164,12 +165,12 @@ async def check_apikey(
         
     process_time = time.time() - start_time
     response.headers["x-process-time"] = str(process_time)
-    response.headers["appname"] = str(appname[0])
+    response.headers["appname"] = str(appname)
 
     print("response.headers: {}".format(response.headers))
 
     response_content = {
-        "message": "authorized".format(appname[0])
+        "message": "authorized {}".format(appname)
     }
     return response_content
 
