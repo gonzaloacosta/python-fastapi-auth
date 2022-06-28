@@ -8,7 +8,8 @@ __author__ = "Gonzalo Acosta"
 __email__ = "gonzaloacostapeiro@gmail.com"
 __version__ = "0.0.1"
 
-from fastapi import FastAPI, status, HTTPException, Response, Header
+from fastapi import FastAPI, status, HTTPException, Response, Header, Request, Query
+
 from database import Base, engine
 from sqlalchemy.orm import Session
 from typing import List, Union
@@ -111,10 +112,10 @@ def read_apikey(id: int, response: Response):
 
 @app.get("/auth",
          status_code=status.HTTP_200_OK)
-def check_apikey(
-        apikey: str,
+async def check_apikey(
+        request: Request,
         response: Response,
-        #x_api_key: Union[str, None] = Header(default=None)
+        apikey: str = "local-key",
         ):
     """
     Validate apikey
@@ -122,8 +123,22 @@ def check_apikey(
 
     start_time = time.time()
 
-    #print("apikey: {}".format(apikey))
-    
+    print("request.headers: {} {}".format(request.headers, request.headers.keys()))
+
+    if "apikey" in request.headers.keys():
+        apikey = request.headers["apikey"]
+        print("header apikey: {}".format(apikey))
+    elif 'apikey' in request.headers["x-forwarded-uri"]:
+        print("x-forwarded-uri: {}".format(request.headers["x-forwarded-uri"]))
+        apikey == "x-forwarded-uri"
+    elif apikey == "local-key":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Need to define apikey in query string or header"
+        )
+    else:
+        print("querystring apikey: {}".format(apikey))
+
     session = Session(bind=engine, expire_on_commit=False)
     apikey_list = session.query(models.Apikeys).all()
 
@@ -135,21 +150,26 @@ def check_apikey(
 
     session.close()
 
-    appname = [ ak.appname for ak in apikey_list if ak.apikey == apikey ]
+    appname = None
+    for ak in apikey_list:
+        if ak.apikey == apikey or ak.apikey in request.headers["x-forwarded-uri"]:
+            appname = ak.appname
+            break
+
     if not appname: 
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"apikey unauthorize"
+            detail=f"unauthorize"
         )
         
     process_time = time.time() - start_time
     response.headers["x-process-time"] = str(process_time)
     response.headers["appname"] = str(appname[0])
 
-    print(response.headers)
+    print("response.headers: {}".format(response.headers))
 
     response_content = {
-        "message": "{} ok".format(appname[0])
+        "message": "authorized".format(appname[0])
     }
     return response_content
 

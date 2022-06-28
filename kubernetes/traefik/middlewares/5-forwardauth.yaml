@@ -1,0 +1,62 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: api-auth
+  namespace: ingest
+spec:
+  forwardAuth:
+    address: http://auth.ingest:8080/auth
+    trustForwardHeader: true
+    authResponseHeaders:
+      - appname
+---
+# http://api.com/api/v1/article/10 > midd > http://api.com/articles
+# http://api.com/auth > midd > http://auth.ingest/auth
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: api-strip-prefix
+  namespace: ingest
+spec:
+  stripPrefix:
+    prefixes:
+      - /api/v1
+      - /auth
+---
+#apiVersion: traefik.containo.us/v1alpha1
+#kind: Middleware
+#metadata:
+#  name: request-id
+#  namespace: ingest
+#spec:
+#  plugin-requestid
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: api-http
+  namespace: ingest
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`api.example.com`) && PathPrefix(`/api/v1`)
+      kind: Rule
+      middlewares:
+        - name: api-auth
+        - name: api-strip-prefix
+        - name: plugin-requestid
+      services:
+        - name: articles
+          port: 8080
+    - match: Host(`api.example.com`) && PathPrefix(`/auth`)
+      kind: Rule
+      middlewares:
+        - name: api-auth
+        - name: api-strip-prefix
+      services:
+        - name: auth
+          port: 8080
+#  tls:
+#    certResolver: pebble

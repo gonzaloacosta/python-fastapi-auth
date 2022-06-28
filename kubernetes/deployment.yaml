@@ -17,7 +17,7 @@ spec:
         app: auth
     spec:
       containers:
-      - image: gonzaloacosta/python-fastapi-apikey:0.0.1
+      - image: gonzaloacosta/python-fastapi-auth:0.0.10
         name: auth
         resources:
           limits:

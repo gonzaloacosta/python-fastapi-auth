@@ -3,7 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 
 # db_path = os.getenv('DB_PATH')
-db_file = "/articles.db"
+db_file = "/apikeys.db"
 db_url = "sqlite://" + db_file
 
 # Create a sqlite engine instance

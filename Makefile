@@ -4,7 +4,7 @@ IMAGE						:= python-fastapi-auth
 HOST_PORT 			:= 9080
 HOST_IP					:= auth.example.com 
 CONTAINER_PORT	:= 80
-VERSION					:= 0.0.1
+VERSION					:= 0.0.10
 BRANCH					:= master
 
 py/venv:
@@ -82,3 +82,17 @@ d/status:
 
 k/apply:
 	@kubectl apply -f kubernetes/*.yaml
+
+watch:
+	@watch -n 5 'kubectl get all -n ingest'
+
+test/auth:
+	@echo "query string parameter"
+	@echo "http://api.example.com/api/v1/article/70\?apikey=super-secret-123 | jq ."
+	@curl -v http://api.example.com/api/v1/article/70\?apikey=super-secret-123 | jq .
+	@echo ""
+	@echo "header"
+	@echo "curl -H apikey:super-secret-123 http://api.example.com/api/v1/article/70 | jq ."
+	@curl -v -H apikey:super-secret-123 http://api.example.com/api/v1/article/70 | jq .
+
+
