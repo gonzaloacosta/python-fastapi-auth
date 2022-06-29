@@ -4,7 +4,7 @@ IMAGE						:= python-fastapi-auth
 HOST_PORT 			:= 9080
 HOST_IP					:= auth.example.com 
 CONTAINER_PORT	:= 80
-VERSION					:= 0.0.11
+VERSION					:= 0.0.12
 BRANCH					:= master
 
 py/venv:
